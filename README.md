@@ -17,6 +17,7 @@ This tutorial assumes the user is running Mac OS environment, commands for Windo
     - [Add Execution Environment](#add-execution-environment)
     - [Create API Key in IBM Cloud](#create-api-key-in-ibm-cloud)
     - [Add API Key to Ansible Automation Platform](#add-api-key-to-ansible-automation-platform)
+    - [Add Ansible Automation Platform Credentials for Use in Playbooks](#add-ansible-automation-platform-credentials-for-use-in-playbooks)
     - [Create Policy as Code Project](#create-policy-as-code-project)
   - [Infrastructure as Code Deployment](#infrastructure-as-code-deployment)
   - [Resource Auditing & Remediation](#resource-auditing--remediation)
@@ -51,7 +52,7 @@ This tutorial assumes the user is running Mac OS environment, commands for Windo
 
 1. Download the Ansible Automation Platform bundle here [AAP Bundle Download](https://developers.redhat.com/products/ansible/download)
 
-2. Once you have downloaded, note the bundle name & version e.g. `ansible-automation-platform-setup-bundle-2.2.0-8.1.tar.gz` then, run the following commands, updating bundle name and version accordingly.
+1. Once you have downloaded, note the bundle name & version e.g. `ansible-automation-platform-setup-bundle-2.2.0-8.1.tar.gz` then, run the following commands, updating bundle name and version accordingly.
 
     ```shell
     scp -i ~/.ssh/policy_as_code_tutorial.pem -P 2223 ~/Downloads/ansible-automation-platform-setup-bundle-2.2.0-8.1.tar.gz itzuser@${TZ_AAP_IP_ADDRESS}:ansible-automation-platform-setup-bundle-2.2.0-8.1.tar.gz
@@ -230,7 +231,24 @@ When you first login to Ansible Automation Platform, you will need to register y
 
 ### Create API Key in IBM Cloud
 
-TODO
+Create an IBM Cloud API Key for your user using one of the following methods. This should be an account on which you have full administrator access, e.g. your personal account. All resources created in this tutorial will be in the 'Lite' (Free) tier for IBM Cloud.
+
+- [IBM Cloud Web UI](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)
+
+- [IBM Cloud CLI](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=cli)
+
+In either method you will receive a JSON file containing the API key such as:
+
+```json
+{
+        "name": "policyascodekey",
+        "description": "",
+        "createdAt": "2022-10-19T16:01+0000",
+        "apikey": "YOUR_API_KEY_IS_HERE"
+}
+```
+
+Note the value for the `"apikey"` key, we will use it in the next section.
 
 ### Add API Key to Ansible Automation Platform
 
@@ -268,6 +286,21 @@ In Ansible Automation Platform, create a new Credential Type for IBM Cloud by pe
     **Credential Type:** IBM Cloud Provider
 
     **IBM Cloud API Key:** [Your IBM Cloud API Key]
+
+### Add Ansible Automation Platform Credentials for Use in Playbooks
+
+1. Navigate to 'Resources -> Credentials', click 'Add' button, enter the following values, then save.
+    *Note: Update `<tz_aap_public_ip>` to the public IP of your Ansible Automation Platform instance*
+
+    **Name:** AAP Admin
+
+    **Credential Type:** Red Hat Ansible Automation Platform
+
+    **Red Hat Ansible Automation Platform:** [https://<tz_aap_public_ip>](https://<tz_aap_public_ip>)
+
+    **Username:** admin
+
+    **Password:** password
 
 ### Create Policy as Code Project
 
@@ -432,9 +465,11 @@ The audit playbook will detect policy violations for running instances. Follow t
 
     **Playbook:** playbooks/cloudant-audit.yaml
 
-    **Credentials (Selected Category):** IBM Cloud Provider
+    **Credentials:**
 
-    **Credentials (Selected):** IBM Cloud API Key
+    - **Selected Category:** IBM Cloud Provider | **Name:** IBM Cloud API Key
+
+    - **Selected Category:** Red Hat Ansible Automation Platform | **Name:** AAP Admin
 
     **Variables:**
 
@@ -444,6 +479,88 @@ The audit playbook will detect policy violations for running instances. Follow t
 
     *Note: Update `<tz_aap_public_ip>` to the public IP of your Ansible Automation Platform instance*
 
-1. Run the audit job by clicking the 'Launch' button. If you do not have any Cloudant instances other than the one configured previously, you should then see a successful run as the instance passes validation.
+1. Run the audit job by clicking the 'Launch' button. You should see a successful run.
 
     ![Audit Success](docs/images/audit-success.png)
+
+1. If you click into the 'Print response' task JSON output, you should see the following values (condensed for brevity). This assumes that you do not have any other Cloudant instances other than the 'policy-as-code-cloudant' instance created in the last section.
+
+    ```json
+    {
+        "msg": {
+            "json": {
+                "passes_validation": true,
+                "policy_violations": []
+            }
+        }
+    }
+    ```
+
+1. Next, we will remove the tag using the IBM Cloud UI to simulate a user making changes outside of the Policy as Code Pipeline. Navigate to your 'policy-as-code-cloudant' instance in [IBM Cloud](https://cloud.ibm.com/).
+
+    ![Cloudant Instance with Tags](docs/images/cloudant-with-tags.png)
+
+1. Click the tags edit icon (pencil) at the top and remove the `costcenter:000159` tag.
+
+    **Before**
+
+    ![With costcenter Tag](docs/images/with-costcenter-tag.png)
+
+    **After**
+
+    ![Without costcenter Tag](docs/images/without-costcenter-tag.png)
+
+1. Run the 'Cloudant Audit Job' again by navigating to 'Resources -> Templates' in Ansible Automation Platform and clicking the 'Launch Template' button.
+
+    ![Launch Audit Template](docs/images/launch-audit-template.png)
+
+1. When you run the job this time, you should see a different output indicating the policy violation due to missing `costcenter:NNNNNN` tag.
+
+    ```json
+    {
+        "msg": {
+            "json": {
+                "passes_validation": false,
+                "policy_violations": [
+                    {
+                        "id": "crn:v1:bluemix:public:cloudantnosqldb:us-south:a/aac9c77faa19874d8a9cbef354b495fc:3a96411a-2ea3-45ae-9896-99853a0b291c::",
+                        "level": "BLOCK",
+                        "playbook": "playbooks/attach_user_tag_to_ic_resource.yaml",
+                        "playbook_variables": {
+                        "resource_id": "crn:v1:bluemix:public:cloudantnosqldb:us-south:a/aac9c77faa19874d8a9cbef354b495fc:3a96411a-2ea3-45ae-9896-99853a0b291c::",
+                        "tag_names": [
+                            "costcenter:000000"
+                        ]
+                        },
+                        "policy_id": "CORP-040-00001",
+                        "reason": "Resource is missing costcenter tag or does not comply to required regex"
+                    }
+                ]
+            }
+        }
+    }
+    ```
+
+1. You should also see that a new Job Template was created in Ansible Automation Platform to remediate the violation.
+
+    ![Remediation Template Creation](docs/images/remediation-template-creation.png)
+
+1. Navigate back to ''Resources -> Templates' and click the 'Edit Template' button to modify the template variables.
+
+    ![Edit Remediation Template](docs/images/edit-remediation-template.png)
+
+1. You should see the template variables filled out, these values will fix the issue but we do not want to assign `costcenter:000000`, but rather `costcenter:000159`.
+
+    ![Edit Remediation Template 2](docs/images/edit-remediation-template-2.png)
+
+1. Click edit to update the `costcenter:000000` to the previous value of `costcenter:000159` and press 'Save'.
+
+    ![Update costcenter Tag](docs/images/update-costcenter-tag.png)
+
+1. Finally, launch the template to make the changes on the Cloudant instance. You should see a successful output.
+
+    ![Remediation Success](docs/images/remediation-success.png)
+
+1. Return to the instance in IBM Cloud, you should see the tag added back remediating the policy violation.
+
+    ![Remediated Cloudant](docs/images/cloudant-with-tags.png)
