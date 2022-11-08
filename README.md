@@ -382,9 +382,10 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
 
     ```yaml
     policy_as_code_plan_validation_url: "http://<tz_aap_public_ip>:8181/v1/data/corp/policies"
+    git_repo_https_clone_url: "https://github.com/<your_gh_username>/tutorial-ibmcloud.git"
     ```
 
-    *Note: Update `<tz_aap_public_ip>` to the public IP of your Ansible Automation Platform instance*
+    *Note: Update `<tz_aap_public_ip>` to the public IP of your Ansible Automation Platform instance and `<your_gh_username>` to your GitHub username or organization where the repositories are cloned.*
 
 1. Add a second job template as before with the following values:
 
@@ -403,6 +404,14 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
     **Credentials (Selected Category):** IBM Cloud Provider
 
     **Credentials (Selected):** IBM Cloud API Key
+
+    **Variables:**
+
+    ```yaml
+    git_repo_https_clone_url: "https://github.com/<your_gh_username>/tutorial-ibmcloud.git"
+    ```
+
+    *Note: Update `<your_gh_username>` to your GitHub username or organization where the repositories are cloned.*
 
 1. Create a Workflow template to connect the two Job templates that were just created by navigating to 'Resources -> Templates' and click 'Add -> Add workflow template' with the following values:
 

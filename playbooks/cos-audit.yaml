@@ -2,7 +2,7 @@
   connection: local
   vars:
     audit_resource_group: default
-    policy_as_code_plan_validation_url: "http://150.240.71.92:8181/v1/data/corp/policies"
+    policy_as_code_plan_validation_url: "http://localhost:8181/v1/data/corp/policies"
     bucket_regions:
       - us-south
       - us-east

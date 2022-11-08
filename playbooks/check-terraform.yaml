@@ -3,8 +3,8 @@
   vars:
     git_clone_path: '/tmp/ansible-pac-test'
     tf_project_path: '/tmp/ansible-pac-test/terraform'
-    policy_as_code_plan_validation_url: "http://150.240.71.92:8181/v1/data/corp/policies"
-    git_repo_https_clone_url: "https://github.com/jem2305/ansible-pac-test.git"
+    policy_as_code_plan_validation_url: "http://localhost:8181/v1/data/corp/policies"
+    git_repo_https_clone_url: ""
 
   tasks:
     - name: Create empty terraform folder
