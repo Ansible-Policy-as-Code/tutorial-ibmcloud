@@ -11,7 +11,7 @@ This tutorial assumes the user is running Mac OS environment, commands for Windo
     - [Obtain Ansible Automation Platform Software](#obtain-ansible-automation-platform-software)
     - [Install Single Node](#install-single-node)
     - [Register Subscription](#register-subscription)
-  - [Clone GitHub Repositories](#clone-github-repositories)
+  - [Fork Tutorial Repository](#fork-tutorial-repository)
   - [Install Open Policy Agent (Podman)](#install-open-policy-agent-podman)
   - [Configure Policy as Code Execution Environment](#configure-policy-as-code-execution-environment)
     - [Add Execution Environment](#add-execution-environment)
@@ -138,9 +138,73 @@ When you first login to Ansible Automation Platform, you will need to register y
 
 1. Finally, accept the license agreement by clicking "Submit".
 
-## Clone GitHub Repositories
+## Fork Tutorial Repository
 
-1. TODO: Clone the GitHub repositories, set environment variables, and ensure Docker build happens
+1. Create a new fork of the tutorial repository by navigating to 'Fork -> Create a new fork'
+
+    ![Create Fork](docs/images/create-fork.png)
+
+1. Ensure the owner is your GitHub.com personal account and the repository name is `tutorial-ibmcloud`. Then, click 'Create fork'.
+
+1. There are two workflows are included with the repository to build the OPA Policy and Ansible Execution Environment images. The Execution Environment image requires your Red Hat credentials to pull the base image. In your forked repo, navigate to 'Settings -> Environments' and click 'New environment'.
+
+    ![New Workflow Environment](docs/images/new-workflow-environment.png)
+
+1. Enter the name `default` and press 'Configure environment'.
+
+    ![Configure Workflow Environment](docs/images/configure-workflow-environment.png)
+
+1. You should be directed to your new workflow environment, next we will add two secrets for your Red Hat credentials.
+
+    ![Workflow Environment Secrets Before](docs/images/workflow-environment-secrets-before.png)
+
+1. Add two secrets `RH_USER` and `RH_PASS` with your Red Hat credentials. You may want to first test locally using Docker or Podman to ensure you have the correct credentials.
+
+    ```shell
+    # Docker Login
+    docker login registry.redhat.io
+
+    # Podman Login
+    podman login registry.redhat.io
+    ```
+
+    ![Workflow Environment Secrets After](docs/images/workflow-environment-secrets-after.png)
+
+1. Next, navigate to the Actions tab to enable the Workflows and click the green button to enable.
+
+    ![Enable Workflows](docs/images/enable-workflows.png)
+
+1. Build the Execution Environment image by navigating to the 'Build and publish Execution Environment' action. Click 'Run workflow -> Run workflow'.
+
+    ![Run Execution Environment Workflow](docs/images/run-ee-workflow.png)
+
+1. Similarly, build the Policy image by navigating to the 'Build and publish Policy Runtime (OPA) image' action. Click 'Run workflow -> Run workflow'.
+
+    ![Run Policy Workflow](docs/images/run-policy-workflow.png)
+
+1. After you have triggered the two workflows you may view them by navigating to 'All workflows'.
+
+    ![All Workflows](docs/images/all-workflows.png)
+
+1. When both workflows have succeeded, you should see the two packages by navigating to 'Code' tab and looking on the right side.
+
+    ![All Workflows Success](docs/images/all-workflows-success.png)
+
+    ![Packages List](docs/images/package-list.png)
+
+1. You can test that the images were built successfully by pulling them from the GitHub Container Registry with the following commands, replacing `<your_username>` with your GitHub username or organization containing the cloned repositories.
+
+    ```shell
+    export GH_USERNAME=<your_username>
+
+    # Docker Pull
+    docker pull ghcr.io/${GH_USERNAME}/tutorial-ibmcloud-ee:main
+    docker pull ghcr.io/${GH_USERNAME}/tutorial-ibmcloud-policies:main
+
+    # Podman Pull
+    podman pull ghcr.io/${GH_USERNAME}/tutorial-ibmcloud-ee:main
+    podman pull ghcr.io/${GH_USERNAME}/tutorial-ibmcloud-policies:main
+    ```
 
 ## Install Open Policy Agent (Podman)
 
