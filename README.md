@@ -213,7 +213,7 @@ When you first login to Ansible Automation Platform, you will need to register y
     ```shell
     export GH_USERNAME=<your_username>
 
-    podman run --name opa -d --publish 8181:8181 --restart always ghcr.io/${GH_USERNAME}/ansible-pac-test-policies:main
+    podman run --name opa -d --publish 8181:8181 --restart always ghcr.io/${GH_USERNAME}/tutorial-ibmcloud-policies:main
     ```
 
 ## Configure Policy as Code Execution Environment
@@ -224,7 +224,7 @@ When you first login to Ansible Automation Platform, you will need to register y
 
     **Name:** Policy as Code Execution Environment
 
-    **Image:** ghcr.io/<your_username>/ansible-pac-test-ee:main
+    **Image:** ghcr.io/<your_username>/tutorial-ibmcloud-ee:main
 
     **Pull:** Always pull container before running.
 
@@ -281,7 +281,7 @@ In Ansible Automation Platform, create a new Credential Type for IBM Cloud by pe
 
     **Source Control Type:** Git
 
-    **Source Control URL:** [https://github.com/<your_username>/ansible-pac-test.git](https://github.com/<your_username>/ansible-pac-test.git)
+    **Source Control URL:** [https://github.com/<your_username>/tutorial-ibmcloud.git](https://github.com/<your_username>/tutorial-ibmcloud.git)
 
     **Source Control Branch/Tag/Commit:** main
 
