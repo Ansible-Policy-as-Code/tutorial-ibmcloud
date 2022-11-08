@@ -1,0 +1,31 @@
+- hosts: localhost
+  connection: local
+  vars:
+    git_clone_path: '/tmp/ansible-pac-test'
+    tf_project_path: '/tmp/ansible-pac-test/terraform'
+    policy_as_code_plan_validation_url: "http://150.240.71.92:8181/v1/data/corp/policies"
+    git_repo_https_clone_url: "https://github.com/jem2305/ansible-pac-test.git"
+
+  tasks:
+    - name: Create empty terraform folder
+      file:
+        path: "{{ git_clone_path }}"
+        state: directory
+        mode: 0755
+      check_mode: no
+
+    - name: Clone Git repo holding Terraform scripts
+      git:
+        repo: "{{ git_repo_https_clone_url }}"
+        dest: "{{ git_clone_path }}"
+        clone: yes
+        force: yes
+        single_branch: yes
+        version: main
+      check_mode: no
+
+    - name: Init terraform
+      community.general.terraform:
+        project_path: "{{ tf_project_path }}"
+        state: present
+        force_init: yes

@@ -1,0 +1,37 @@
+- hosts: localhost
+  connection: local
+  vars:
+    IC_API_KEY: "{{ lookup('env', 'IC_API_KEY') }}"
+    resource_id: "crn:v1:bluemix:public:cloudantnosqldb:us-south:a/aac9c77faa19874d8a9cbef354b495fc:a9c37cf6-ecc2-4af4-a31d-db3c9c309736::"
+    tag_names:
+      - costcenter:000159
+
+  tasks:    
+    - name: Get ID Token for IBM Cloud
+      ansible.builtin.uri:
+        url: https://iam.cloud.ibm.com/identity/token
+        method: POST
+        return_content: yes
+        body:
+          grant_type: urn:ibm:params:oauth:grant-type:apikey
+          apikey: "{{ IC_API_KEY }}"
+        body_format: form-urlencoded
+        headers:
+          Accept: application/json
+      register: token_response
+    
+    - name: Extract access token
+      set_fact: ibmcloud_access_token="{{token_response.json.access_token}}" 
+
+    - name: Add tag to resource
+      ansible.builtin.uri:
+        url: https://tags.global-search-tagging.cloud.ibm.com/v3/tags/attach?tag_type=user
+        method: POST
+        body:
+          resources:
+            - resource_id: "{{ resource_id }}"
+          tag_names: "{{ tag_names }}"
+        headers:
+          Authorization: "Bearer {{ ibmcloud_access_token }}"
+          Accept: application/json
+        body_format: json

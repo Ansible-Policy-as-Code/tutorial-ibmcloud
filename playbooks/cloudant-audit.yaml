@@ -1,0 +1,123 @@
+- hosts: localhost
+  connection: local
+  vars:
+    policy_as_code_plan_validation_url: "http://localhost:8181/v1/data/corp/policies"
+    CONTROLLER_HOST: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    CONTROLLER_USERNAME: "{{ lookup('env', 'CONTROLLER_USERNAME') }}"
+    CONTROLLER_PASSWORD: "{{ lookup('env', 'CONTROLLER_PASSWORD') }}"
+    IC_API_KEY: "{{ lookup('env', 'IC_API_KEY') }}"
+
+  tasks:    
+    - name: Get ID Token for IBM Cloud
+      ansible.builtin.uri:
+        url: https://iam.cloud.ibm.com/identity/token
+        method: POST
+        return_content: yes
+        body:
+          grant_type: urn:ibm:params:oauth:grant-type:apikey
+          apikey: "{{ IC_API_KEY }}"
+        body_format: form-urlencoded
+        headers:
+          Accept: application/json
+      register: token_response
+    
+    - name: Extract access token
+      set_fact: ibmcloud_access_token="{{token_response.json.access_token}}" 
+
+    - name: Extract access token
+      set_fact:
+        resource_id: "crn:v1:bluemix:public:cloudantnosqldb:us-south:a/aac9c77faa19874d8a9cbef354b495fc:a9c37cf6-ecc2-4af4-a31d-db3c9c309736::"
+
+    # TODO: loop if returns more than 100 resources
+    - name: Get IBM Cloud Resources
+      ansible.builtin.uri:
+        url: https://resource-controller.cloud.ibm.com/v2/resource_instances
+        method: GET
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ ibmcloud_access_token }}"
+          Accept: application/json
+      register: resource_instances_response
+
+    - name: Extract Cloudant Storage instances
+      set_fact: cloudant_instances_response="{{ resource_instances_response.json.resources | selectattr("id", "match", "^crn:v1:bluemix:public:cloudantnosqldb.+") | list }}" 
+
+    # TODO: loop if returns more than 100 tags
+    - name: Get resource tags
+      ansible.builtin.uri:
+        url: "https://tags.global-search-tagging.cloud.ibm.com/v3/tags?attached_to={{ item.crn | urlencode() }}"
+        method: GET
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ ibmcloud_access_token }}"
+          Accept: application/json
+      register: resource_tags_list
+      loop: "{{ cloudant_instances_response }}"
+      
+      # After task, cloudant_instances will be an array of instances like:
+      # [
+      #     {
+      #         "id": "crn:v1:bluemix:public:cloudantnosqldb:us-south:a/aac9c77faa19874d8a9cbef354b495fc:a9c37cf6-ecc2-4af4-a31d-db3c9c309736::",
+      #         "type": "ibm_cloudant",
+      #         "values": {
+      #             "tags": [
+      #                 "costcenter:001589"
+      #             ]
+      #         }
+      #     }
+      # ]
+    - name: Build a list of all the cloudant instances
+      set_fact:
+        cloudant_instances: >-
+          {%- set results = [] -%}
+          {%- for instance in cloudant_instances_response -%}
+            {%- set tags = [] -%}
+            {%- for tag in resource_tags_list.results[ loop.index - 1 ].json['items'] -%}
+              {%- set _ = tags.append(tag.name) -%}
+            {%- endfor -%}
+            {%- set _ = results.append({
+              "id": instance.crn,
+              "type": "ibm_cloudant",
+              "values": {
+                "tags": tags
+              }
+            }) -%}
+          {%- endfor -%}
+          {{ results }}
+
+    - name: Validate cloudant resources
+      ansible.builtin.uri:
+        url: "{{ policy_as_code_plan_validation_url }}"
+        method: POST
+        body: '{"input": { "ibmcloud": { "resources": {{ cloudant_instances }} } } }'
+        body_format: json
+      check_mode: no
+      register: validation_response
+
+    - name: Print response
+      debug:
+        msg: "{{ validation_response }}"
+
+    - name: Set validation failures variable
+      set_fact: policy_violations="{{validation_response.json.result.policy_violations}}"            
+
+    - name: Create job templates for each policy violation
+      awx.awx.job_template:
+        name: "{{ item.playbook.split('.') | first | split('/') | last }}-{{ lookup('community.general.random_string', length=8, upper=false, special=false) }}"
+        job_type: "run"
+        organization: "Default"
+        inventory: "Demo Inventory"
+        project: "Policy as Code"
+        playbook: "{{ item.playbook }}"
+        credentials:
+          - "IBM Cloud API Key"
+        execution_environment: "Policy as Code Execution Environment"
+        controller_host: "{{ CONTROLLER_HOST }}"
+        controller_username: "{{ CONTROLLER_USERNAME }}"
+        controller_password: "{{ CONTROLLER_PASSWORD }}"
+        validate_certs: no
+        extra_vars: "{{ item.playbook_variables }}"
+      when: item.playbook != 'Not implemented'
+      with_items: "{{ policy_violations }}"
+      register: create_job_template_results
+      check_mode: no

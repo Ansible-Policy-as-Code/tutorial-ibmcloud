@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: "IBM Plex Sans script=all rev=1", sans-serif;
+        }
+        .wrapper {
+  display: grid;
+  grid-template-columns: repeat(6, 350px);
+  grid-template-rows: repeat(3, 350px);
+  height: 1200px;
+  width: auto;
+  gap: 10px;
+  grid-template-areas:
+    "a a a a a a"
+    "b c c c c c"
+    "b c c c c c";
+}
+        ul li {
+              list-style-type: none;
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        img {
+            width: 75px
+        }
+        a {
+          padding: 20px;
+        }
+        div {
+          width: auto;
+              
+        }
+        thead {
+            color: black;
+            font-size: large;
+            text-align: left;
+            vertical-align: right;
+            position: sticky;
+            top: 2em;
+        
+        }
+        #this_report {
+            padding:10px;
+            position: sticky;
+            top: 0;
+           background-color: white;
+        }
+        tbody {
+            color: black;
+            text-align: left;   
+        }
+     
+        h1 {
+            margin: 30px;
+        }
+        h3{
+            margin: 10px 45px 10px;
+        }
+        tfoot {
+            color: black;
+        }
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            }
+          .row {
+            display: none;
+          }
+          table {
+            width: 1500px;
+          }
+            th {
+              background-color: lightgrey;
+              padding-top: 12px;
+              padding-bottom: 12px;
+              text-align: left;
+            }
+        #table td, #table th {
+            border: 1px solid #ddd;
+            padding: 8px;
+}
+           .top {
+                 grid-area: a;
+           }
+            .right {
+                 width: 79%;
+                float: left;
+                position: relative;
+                height: 600px;
+                overflow: scroll;
+                border: 1px solid black;
+                  grid-area: c;
+            }
+            .left {
+              float: left;
+              width: auto%;
+               height: 600px;
+                overflow: scroll;
+                border: 1px solid black;
+                  grid-area: b;
+         
+            }
+            .non_conformance {
+            line-height: 14px;
+            text-align: center;
+            height: 14px;
+            width: 26px;
+            background: #ec4e4e;
+            padding: 5px;
+            margin: 5px;
+            border-radius: 15%;         
+            }
+            #id {
+                display:none;
+            }
+          .reportid {
+              display:none
+              }
+              
+       tr:hover {background-color: #ddd;}
+       .securityGroupsId:hover {
+             box-shadow: inset 100em 0 0 0 #ddd;
+       }
+        
+    </style>
+</head>
+
+<body>
+    <div class='wrapper'>
+        <div class="top">
+
+            <h1> <a href="https://cdnlogo.com/logo/ansible_14048.html"><img src="https://cdn.cdnlogo.com/logos/a/51/ansible.svg"></a> Network Security Group Audit Report</h1>
+            <h3 >Summary</h3>
+            <ul id="summaryList">
+                <li>Report: {{ report_file_name }}</li>
+                <li>Timestamp: {{ ansible_date_time.iso8601 }}</li>
+                <li>Audit Resource Group: {{ audit_resource_group }}</li>
+                <li>Network Security Groups Scanned: {{ network_security_groups.securitygroups | count }}</li>
+            </ul>        
+    </div>    
+        <div class='left'>
+            <ul id='myList'> <ul>
+        </div>
+        <div class='right'>
+         <div id="this_report"></div>
+            <table id='table'>
+                <thead>
+                    <tr>
+                        <th id="id">ID</th>
+                        <th>Name</th>
+                        <th>Reason</th>
+                        <th>Playbook</th>
+                        <th>Playbook Variables</th>
+                    </tr>
+                </thead>
+                <tbody class="table">
+                        {% for validation_failure in validation_response.json.result.resource_validation_failures %}
+                        <tr class="row" id={{ loop.index }}>
+                            <td class="reportid">{{ validation_failure.resource.id | regex_search('(?<=\/networkSecurityGroups\/)[^\/]+') }}</td>
+                            <td class="name">{{ validation_failure.resource.name }}</td>
+                            <td class="reason">{{ validation_failure.reason }}</td>
+                            <td class="playbook">{{ validation_failure.playbook }}</td>
+                            <td class="playbookvar">{{ validation_failure.playbook_variables | to_json }}</td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    <div>
+</body>
+<script>
+    var table, rows, arr, i, unique,list, k, li, a, item, hash, currentRow, key, summary
+    table = document.getElementById("table")
+    rows = table.rows
+    arr = []
+    hash = {}
+    hash.totalViolations = 0
+        for ( i = 1; i < rows.length; i++) {
+            arr.push(rows[i].getElementsByTagName('TD')[0].innerHTML)
+            currentRow = rows[i].getElementsByTagName('TD')[0].innerHTML
+            if (!hash[currentRow]){
+                hash[currentRow] = 1
+                 hash.totalViolations++
+            } else {
+                hash[currentRow]++
+                 hash.totalViolations++
+                }
+        };
+    unique = [... new Set(arr)]
+    list = document.getElementById("myList")
+    summary = document.getElementById("summaryList")
+    li = document.createElement("li");
+    li = document.createElement("li");
+    li.innerText = `Total Non-Conformance(s): ${hash.totalViolations}`
+    summary.appendChild(li)
+    delete hash.totalViolations;
+        for (key in hash) {
+            item = hash[key]
+            li = document.createElement("li");
+            a = document.createElement("a")
+            li.className = 'securityGroupsId';
+            li.innerText = key;
+            list.appendChild(li);
+            a.innerText = hash[key]
+            a.className ='non_conformance'
+            li.appendChild(a)
+            };
+    </script>
+    <script>
+      bttn = document.getElementsByClassName('securityGroupsId');
+     
+      for(let c=0; c < bttn.length; c++){
+        bttn[c].addEventListener('click',item(bttn[c].innerHTML))
+        }
+    function item(c){
+        return function(){
+        console.log("clicked", c)
+        var subString, pattern, text, reportIdBttn, k
+        text = cleanReportId(c)
+        sortTable(text)
+      }
+      
+    }
+    
+    function cleanReportId(str) {
+         var subString, pattern, text, 
+        text = `${str}`;
+        pattern = /^(.*?)\</;
+        subString = text.match(pattern)
+        return subString[1]
+    }
+    function sortTable(groupId) {
+        var table, rows, arr, i, unique,list, k, li, item, string
+        table = document.getElementById("table")
+        rows = table.rows
+        reportIdBttn = document.getElementsByClassName('securityGroupsId')
+            for (k = 0; k < reportIdBttn.length; k++){
+                        item = reportIdBttn[k]
+                      string = cleanReportId(item.innerHTML)
+                      console.log(string, "string thing", groupId , string == groupId)
+                      if (string == groupId) {
+                        item.style.background = "#ddd"
+                      } else {item.style.background = "white"}
+                 }      
+       
+            for ( i = 1; i < rows.length; i++) {
+                rows[i].style.display = "none"
+            }
+            for ( i = 1; i < rows.length; i++) {
+                if( rows[i].getElementsByTagName('TD')[0].innerHTML === groupId ) {
+                rows[i].style.display = "table-row"
+                }
+             }
+            item = document.getElementById("this_report")
+            item.innerHTML = `Non-Conformance Report: ${groupId}`
+    }
+    </script>
+    </html>
