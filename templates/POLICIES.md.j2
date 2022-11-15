@@ -1,0 +1,18 @@
+# Corp Policies
+
+## Policy Contents
+
+{% for annotation in annotations -%}
+- [{{ annotation.annotations.title }}](#{{ annotation.annotations.title | lower | replace(" ", "-") }})
+{% endfor -%}
+{% for annotation in annotations %}
+## {{ annotation.annotations.title }}
+
+|     |     |
+| --- | --- |
+| **Description** | {{ annotation.annotations.description }} |
+| **Location** | [/{{ annotation.location.file }}:{{ annotation.location.row }}](/{{ annotation.location.file }}#L{{ annotation.location.row }}) |
+{% for resource in annotation.annotations.custom.affected_resources -%}
+| {% if loop.index == 1 %}**Resources Affected**{% endif %} | {{ resource }} |
+{% endfor -%}
+{% endfor -%}

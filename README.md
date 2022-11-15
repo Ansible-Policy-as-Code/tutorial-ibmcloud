@@ -21,6 +21,7 @@ This tutorial assumes the user is running Mac OS environment, commands for Windo
     - [Create Policy as Code Project](#create-policy-as-code-project)
   - [Infrastructure as Code Deployment](#infrastructure-as-code-deployment)
   - [Resource Auditing & Remediation](#resource-auditing--remediation)
+  - [Appendix](#appendix)
 
 ## TechZone VM Provisioning
 
@@ -99,7 +100,7 @@ This tutorial assumes the user is running Mac OS environment, commands for Windo
     ./setup.sh && exit
     ```
 
-1. Once installation is finished, you may then log into Ansible Automation Platform by pasting the public IP of your VM into a browser. Then enter the credentials U: `admin` P: `password` . You will be presented with a screen that requires you to activate your subscription.
+1. Once installation is finished, you may then log into Ansible Automation Platform by navigating to [https://<tz_aap_public_ip>](https://<tz_aap_public_ip>) in a browser. Then enter the credentials U: `admin` P: `password` . You will be presented with a screen that requires you to activate your subscription.
 
 ### Register Subscription
 
@@ -573,3 +574,7 @@ The audit playbook will detect policy violations for running instances. Follow t
 1. Return to the instance in IBM Cloud, you should see the tag added back remediating the policy violation.
 
     ![Remediated Cloudant](docs/images/cloudant-with-tags.png)
+
+## Appendix
+
+You have completed the tutorial. There are some notes in the [Appendix](docs/APPENDIX.md) document if you wish to read further.

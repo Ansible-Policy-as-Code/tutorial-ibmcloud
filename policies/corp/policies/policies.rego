@@ -22,27 +22,24 @@ passes_validation {
     num_blocks == 0
 }
 
-# -----------------------------------------------------------------------------
-# Policy:       CORP-040-00001
-# Description:  All ibm_cloudant resources must contain a tag matching
-#               costcenter:NNNNNN where N is some number 0-9
-# -----------------------------------------------------------------------------
+# METADATA
+# title: CORP-040-00001 - Cost center tagging
+# description: >-
+#   All ibm_cloudant resources must contain a tag matching
+#   costcenter:NNNNNN where N is some number 0-9
+# custom:
+#   affected_resources:
+#     - ibm_cloudant
 CORP_040_00001_id := "CORP-040-00001"
 CORP_040_00001_message := "Resource is missing costcenter tag or does not comply to required regex"
 CORP_040_00001_playbook := "playbooks/attach_user_tag_to_ic_resource.yaml"
-# standardize_terraform(tf_resource) = std_resource {
-#     std_resource := {
-#         "id": tf_resource.address,
-#         "type": tf_resource.type,
-#         "values": tf_resource.change.after
-#     }
-# }
 CORP_040_00001_playbook_variables(cloudant_resource) := playbook_vars {
     playbook_vars := {
             "resource_id": cloudant_resource.id,
             "tag_names": ["costcenter:000000"]
     }
 }
+
 # add CORP_040_00001 policy to policy set
 policies[policy_id] := policy {
     policy_id := CORP_040_00001_id
@@ -90,10 +87,13 @@ policy_violations[CORP_040_00001_violation] {
 
 }
 
-# -----------------------------------------------------------------------------
-# Policy:       CORP-040-00002
-# Description:  All ibm_cos_buckets must not use public endpoints
-# -----------------------------------------------------------------------------
+# METADATA
+# title: CORP-040-00002 - Publicly exposed object storage buckets
+# description: >-
+#   No ibm_cos_buckets may use public endpoints
+# custom:
+#   affected_resources:
+#     - ibm_cos_bucket
 CORP_040_00002_id := "CORP-040-00002"
 CORP_040_00002_message := "Cloud Object Storage buckets must not use public endpoints"
 
