@@ -18,10 +18,10 @@ OPA_INSPECT_JSON=$(opa inspect -a -f json policies)
 echo $OPA_INSPECT_JSON > TEMP_policies.json
 
 # Process POLICIES.md template with policy metadata
-jinja2 templates/POLICIES.md.j2 TEMP_policies.json -o policies/POLICIES.md
+jinja2 docs/templates/POLICIES.md.j2 TEMP_policies.json -o docs/POLICIES.md
 
 # Ensure POLICIES.md file is added to current commit
-git add policies/POLICIES.md
+git add docs/POLICIES.md
 
 # Clean up
 rm TEMP_policies.json

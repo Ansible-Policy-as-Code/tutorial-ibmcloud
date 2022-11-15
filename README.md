@@ -321,7 +321,7 @@ In Ansible Automation Platform, create a new Credential Type for IBM Cloud by pe
 
 ## Infrastructure as Code Deployment
 
-The policy as code repository comes pre-configured with one policy that will be used. This policy checks if all IBM Cloudant resources have a tag matching regex `^costcenter:(\\d){6}$` i.e. in the format `costcenter:NNNNNN` where `N` is some number `0-9`. An excerpt of this policy implementation is provided below from `policies/corp/policies/policies.rego`:
+The policy as code repository comes pre-configured with one policy that will be used. You may view the documentation for policies in [docs/POLICIES.md](docs/POLICIES.md) This policy checks if all IBM Cloudant resources have a tag matching regex `^costcenter:(\\d){6}$` i.e. in the format `costcenter:NNNNNN` where `N` is some number `0-9`. An excerpt of this policy implementation is provided below from `policies/corp/policies/policies.rego`:
 
 ```rego
 policy_violations[CORP_040_00001_violation] {
@@ -388,7 +388,7 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
 
     *Note: Update `<tz_aap_public_ip>` to the public IP of your Ansible Automation Platform instance and `<your_gh_username>` to your GitHub username or organization where the repositories are cloned.*
 
-1. Add a second job template as before with the following values:
+2. Add a second job template as before with the following values:
 
     **Name:** Deploy Terraform
 
@@ -414,7 +414,7 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
 
     *Note: Update `<your_gh_username>` to your GitHub username or organization where the repositories are cloned.*
 
-1. Create a Workflow template to connect the two Job templates that were just created by navigating to 'Resources -> Templates' and click 'Add -> Add workflow template' with the following values:
+3. Create a Workflow template to connect the two Job templates that were just created by navigating to 'Resources -> Templates' and click 'Add -> Add workflow template' with the following values:
 
     **Name:** Check & Deploy Terraform
 
@@ -422,17 +422,17 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
 
     **Project:** Policy as Code
 
-1. After you click 'Save' you will be presented with a screen to create the workflow. First, select the 'Check Terraform' template and add to Workflow. Then add the 'Deploy Terraform' job after the 'Check Terraform' with the option 'On Success'. Finally, click 'Save'.
+4. After you click 'Save' you will be presented with a screen to create the workflow. First, select the 'Check Terraform' template and add to Workflow. Then add the 'Deploy Terraform' job after the 'Check Terraform' with the option 'On Success'. Finally, click 'Save'.
 
-1. You may then run the workflow by clicking the 'Launch' button.
+5. You may then run the workflow by clicking the 'Launch' button.
 
-1. On the first run, you will see the 'Check Terraform' job fail. This is because the Cloudant instance fails to meet policy requirements.
+6. On the first run, you will see the 'Check Terraform' job fail. This is because the Cloudant instance fails to meet policy requirements.
 
     ![Workflow Failure](docs/images/workflow-failure.png)
 
     ![Workflow Failure details](docs/images/workflow-failure-details.png)
 
-1. Next, you should update the `tags` line for the `ibm_cloudant.cloudant` resource inside of `terraform/main.tf` file to add tags by removing the comment. After you remove the commented line, that block should appear as the following:
+7. Next, you should update the `tags` line for the `ibm_cloudant.cloudant` resource inside of `terraform/main.tf` file to add tags by removing the comment. After you remove the commented line, that block should appear as the following:
 
     ```terraform
     resource "ibm_cloudant" "cloudant" {
@@ -449,11 +449,11 @@ The Terraform resources also contains a definition for an IBM Cloudant instance 
     }
     ```
 
-1. Commit the changes and rerun the 'Check & Deploy Terraform' workflow. Note: if you do not have an upgraded IBM Cloud account, you must not have any other Cloudant instance or your deployment will fail.
+8. Commit the changes and rerun the 'Check & Deploy Terraform' workflow. Note: if you do not have an upgraded IBM Cloud account, you must not have any other Cloudant instance or your deployment will fail.
 
     ![Successful Workflow](docs/images/successful-workflow.png)
 
-1. You should also see the Cloudant instance in the IBM Cloud dashboard.
+9. You should also see the Cloudant instance in the IBM Cloud dashboard.
 
     ![Cloudant Instance](docs/images/cloudant-instance.png)
 

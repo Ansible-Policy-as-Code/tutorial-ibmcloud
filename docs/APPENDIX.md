@@ -4,7 +4,7 @@
 
 OPA provides [annotation-based metadata processing](https://www.openpolicyagent.org/docs/latest/annotations/). This can be used to easily generate human-readable policy documentation using code.
 
-Included in this repository is a script to generate the docs at `policies/POLICIES.md` using [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) template engine (Note: this is the same engine that Ansible uses).
+Included in this repository is a script to generate the docs in [POLICIES.md](POLICIES.md) using [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) template engine (Note: this is the same engine that Ansible uses).
 
 As a pre-requisite you must install OPA & Jinja CLI using the following commands.
 
@@ -32,4 +32,4 @@ After you have added comments, from the root directory of this project you may r
 ./scripts/updatePoliciesDocument.sh
 ```
 
-If you wish to update the Markdown template, that is defined in [/templates/POLICIES.md.j2](/templates/POLICIES.md.j2).
+If you wish to update the Markdown template, that is defined in [/docs/templates/POLICIES.md.j2](/docs/templates/POLICIES.md.j2).
